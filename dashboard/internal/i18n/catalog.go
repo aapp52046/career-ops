@@ -775,11 +775,176 @@ var Es = Catalog{
 	ViewFlat:     "plano",
 }
 
+// ZhTw is the static Traditional Chinese (Taiwan) translation catalog.
+var ZhTw = Catalog{
+	// Screen banners & general
+	AppTitle:       "求職管道",
+	OffersSummary:  "%d 筆職缺 | 平均 %s/5",
+	NoOffersMatch:  "沒有符合此篩選的職缺",
+	LoadingPreview: "載入預覽中...",
+
+	// Tabs & filters
+	TabAll:       "全部",
+	TabEvaluated: "已評估",
+	TabApplied:   "已投遞",
+	TabInterview: "面試中",
+	TabResponded: "已回應",
+	TabTop:       "TOP ≥4",
+	TabSkip:      "略過",
+	TabRejected:  "已拒絕",
+	TabDiscarded: "已放棄",
+
+	// Table column headers
+	ColFit:      "契合",
+	ColApplied:  "投遞日",
+	ColCompany:  "公司",
+	ColRole:     "職稱",
+	ColStatus:   "狀態",
+	ColLocation: "地點",
+	ColPay:      "薪資",
+	ColPosted:   "刊登",
+	ColLast:     "最後",
+
+	// Preview labels
+	LabelLoc:     "地點：",
+	LabelPay:     "薪資：",
+	LabelLast:    "最後聯繫：",
+	LabelRemote:  "遠端：",
+	LabelOutcome: "結果：",
+
+	// Work modes
+	ModeRemote:     "遠端",
+	ModeRemoteFlex: "遠端（彈性）",
+	ModeHybrid:     "混合",
+	ModeFull:       "現場",
+
+	// Progress screen
+	ProgressTitle:   "求職進度",
+	ProgressSummary: "%d 已評估 | 平均 %.1f 分",
+	FunnelTitle:     "管道漏斗",
+	ScoresTitle:     "分數分佈",
+	RatesTitle:      "轉換率",
+	WeeklyTitle:     "每週活動",
+	ActiveInfo:      "%d 個進行中投遞 | 共 %d 個職缺",
+
+	// Stats screen
+	StatsTitle:             "求職統計",
+	StatsSummary:           "%d 已評估 | %d 個職類",
+	StatsStrategicInsights: "策略洞察",
+	FitQualityDistribution: "契合品質分佈",
+	SeniorityMix:           "年資組合",
+	QualityBreakdown:       "品質分佈：",
+	MeetQualityBar:         "✓ %.0f%% 達 ≥4.0 門檻",
+	SalaryBandDist:         "薪資區間分佈：",
+	ArchetypeTitle:         "依職類",
+	WorkModeTitle:          "依工作模式",
+	LocationTitle:          "依地點",
+	PayTitle:               "薪資範圍（刊登上限，NT$）",
+	ColArchetype:           "職類",
+	ColCount:               "數量",
+	ColAvgScore:            "平均契合",
+	PayCount:               "資料筆數：",
+	PayAvg:                 "平均：",
+	PayMedian:              "中位數：",
+	PayMax:                 "最高：",
+	PaySourceSplit:         "%d 刊登, %d 估算",
+	InsightVolumeFit:       "最大量在 %s（%d 個職缺, %.0f%%）· 最高契合在 %s（平均 %.1f/5）",
+	InsightVolumePrimary:   "主要職類是 %s（%d 個職缺, 佔已評估管道的 %.0f%%）",
+	InsightWorkMode:        "工作模式分佈：%.0f%% 的職缺為 %s",
+	InsightPayBenchmark:    "薪資基準：中位數上限薪 NT$%.0fK（最高 NT$%.0fK）— %d 筆資料",
+
+	// Seniority levels
+	SeniorityExecutive:      "高階主管",
+	SeniorityStaffPrincipal: "首席 / 資深首席",
+	SeniorityLeadManager:    "組長 / 主管",
+	SenioritySenior:         "資深",
+	SeniorityMidLevel:       "中階",
+	SeniorityJuniorEntry:    "初階 / 入門",
+
+	// Relative dates
+	TimeToday:     "今天",
+	TimeYesterday: "昨天",
+	TimeDaysAgo:   "%d 天前",
+
+	// Status display names
+	StatusEvaluated: "已評估",
+	StatusApplied:   "已投遞",
+	StatusResponded: "已回應",
+	StatusInterview: "面試中",
+	StatusOffer:     "已獲 Offer",
+	StatusRejected:  "已拒絕",
+	StatusDiscarded: "已放棄",
+	StatusSkip:      "略過",
+	StatusHired:     "已到職",
+
+	// Additional UI strings
+	NoData:        "無資料",
+	EmptyFile:     "（空檔案）",
+	RateResponse:  "回應率：",
+	RateInterview: "面試率：",
+	RateOffer:     "Offer 率：",
+
+	// Footer descriptions & hints
+	HelpNav:        " 移動  ",
+	HelpTabs:       " 分頁  ",
+	HelpSearch:     " 搜尋  ",
+	HelpSort:       " 排序  ",
+	HelpRefresh:    " 重新整理  ",
+	HelpReport:     " 報告  ",
+	HelpOpenURL:    " 開啟 URL  ",
+	HelpOpenPDF:    " 開啟 PDF  ",
+	HelpRegenPDF:   " 重新產生 PDF  ",
+	HelpChange:     " 改狀態  ",
+	HelpColumns:    " 欄位  ",
+	HelpView:       " 檢視  ",
+	HelpProgress:   " 進度  ",
+	HelpStats:      " 統計  ",
+	HelpQuit:       " 離開",
+	HelpScroll:     " 捲動  ",
+	HelpPage:       " 換頁  ",
+	HelpTopEnd:     " 最上/最下  ",
+	HelpLanguage:   " 語言  ",
+	HelpManifesto:  " 宣言  ",
+	HelpBack:       " 返回",
+	HelpNavigate:   " 導覽  ",
+	HelpToggle:     " 切換  ",
+	HelpClose:      " 關閉",
+	HelpConfirm:    " 確認  ",
+	HelpCancel:     " 取消",
+	HelpFilterLive: " 即時篩選  ",
+	HelpKeep:       " 保留  ",
+	HelpClear:      " 清除  ",
+
+	// Picker overlay titles & bar hints
+	PickerChangeStatus: "變更狀態：",
+	PickerColumnsTitle: "─── 欄位（SPACE 切換 · ESC 關閉）───",
+	SearchHintInput:    "   Enter：保留   Esc：取消   Ctrl+U：清除",
+	SearchHintNormal:   "   Esc：清除   /：編輯",
+	SearchMatching:     "  %d/%d 符合",
+	SortLabel:          "[排序：%s]",
+	ViewLabel:          "[檢視：%s]",
+	ShownCount:         "顯示 %d 筆",
+	ColReport:          "報告",
+	ColPDF:             "PDF",
+
+	// Sort & view modes
+	SortScore:    "分數",
+	SortDate:     "日期",
+	SortCompany:  "公司",
+	SortStatus:   "狀態",
+	SortLocation: "地點",
+	SortPay:      "薪資",
+	SortLast:     "最後",
+	ViewGrouped:  "分組",
+	ViewFlat:     "平鋪",
+}
+
 // Current points to the active language catalog. Defaults to English (&En).
 var Current = &En
 
 // SetLang sets the active catalog based on language code prefix
-// (e.g., "tr", "tr_TR" -> &Tr; "es", "es_ES" -> &Es; anything else -> &En).
+// (e.g., "tr", "tr_TR" -> &Tr; "es", "es_ES" -> &Es; "zh", "zh-TW",
+// "zh_TW", "zh-Hant" -> &ZhTw; anything else -> &En).
 func SetLang(lang string) {
 	l := strings.ToLower(strings.TrimSpace(lang))
 	switch {
@@ -787,28 +952,38 @@ func SetLang(lang string) {
 		Current = &Tr
 	case strings.HasPrefix(l, "es"):
 		Current = &Es
+	case strings.HasPrefix(l, "zh"):
+		Current = &ZhTw
 	default:
 		Current = &En
 	}
 }
 
-// ToggleLang switches Current between &En and &Tr.
+// ToggleLang cycles Current through En → Tr → Es → ZhTw → En.
 func ToggleLang() {
-	if Current == &En {
+	switch Current {
+	case &En:
 		Current = &Tr
-	} else {
+	case &Tr:
+		Current = &Es
+	case &Es:
+		Current = &ZhTw
+	default:
 		Current = &En
 	}
 }
 
 // GetLang returns the active language code ("tr" if Current == &Tr, "es" if
-// Current == &Es, else "en").
+// Current == &Es, "zh-TW" if Current == &ZhTw, else "en").
 func GetLang() string {
 	if Current == &Tr {
 		return "tr"
 	}
 	if Current == &Es {
 		return "es"
+	}
+	if Current == &ZhTw {
+		return "zh-TW"
 	}
 	return "en"
 }

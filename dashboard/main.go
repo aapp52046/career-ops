@@ -359,7 +359,7 @@ func main() {
 		}
 	}
 	pathFlag := flag.String("path", defaultPath, "Path to career-ops directory")
-	langFlag := flag.String("lang", "", "Language for UI (en, tr). Defaults to auto-detect/en.")
+	langFlag := flag.String("lang", "", "Language for UI (en, tr, es, zh-TW). Defaults to auto-detect/en.")
 	flag.Parse()
 
 	if *langFlag != "" {

@@ -11,17 +11,18 @@ func TestStatusLabel(t *testing.T) {
 		en   string
 		tr   string
 		es   string
+		zh   string
 	}{
-		{"interview", "Interview", "Mülakat", "Entrevista"},
-		{"offer", "Offer", "Teklif", "Oferta"},
-		{"hired", "Hired", "İşe Alındı", "Contratada"},
-		{"responded", "Responded", "Yanıt Verildi", "Respondida"},
-		{"applied", "Applied", "Başvuruldu", "Aplicada"},
-		{"evaluated", "Evaluated", "Değerlendirildi", "Evaluada"},
-		{"skip", "SKIP", "Uygun Değil", "OMITIR"},
-		{"rejected", "Rejected", "Reddedildi", "Rechazada"},
-		{"discarded", "Discarded", "İptal Edildi", "Descartada"},
-		{"unknown", "unknown", "unknown", "unknown"},
+		{"interview", "Interview", "Mülakat", "Entrevista", "面試中"},
+		{"offer", "Offer", "Teklif", "Oferta", "已獲 Offer"},
+		{"hired", "Hired", "İşe Alındı", "Contratada", "已到職"},
+		{"responded", "Responded", "Yanıt Verildi", "Respondida", "已回應"},
+		{"applied", "Applied", "Başvuruldu", "Aplicada", "已投遞"},
+		{"evaluated", "Evaluated", "Değerlendirildi", "Evaluada", "已評估"},
+		{"skip", "SKIP", "Uygun Değil", "OMITIR", "略過"},
+		{"rejected", "Rejected", "Reddedildi", "Rechazada", "已拒絕"},
+		{"discarded", "Discarded", "İptal Edildi", "Descartada", "已放棄"},
+		{"unknown", "unknown", "unknown", "unknown", "unknown"},
 	}
 
 	for _, tt := range tests {
@@ -36,6 +37,9 @@ func TestStatusLabel(t *testing.T) {
 			}
 			if got := Es.StatusLabel(tt.norm); got != tt.es {
 				t.Fatalf("Es.StatusLabel(%q) = %q, expected %q", tt.norm, got, tt.es)
+			}
+			if got := ZhTw.StatusLabel(tt.norm); got != tt.zh {
+				t.Fatalf("ZhTw.StatusLabel(%q) = %q, expected %q", tt.norm, got, tt.zh)
 			}
 		})
 	}
@@ -103,6 +107,23 @@ func TestFormatTimeAgo(t *testing.T) {
 	if got := Es.FormatTimeAgo("not-a-date"); got != "not-a-date" {
 		t.Errorf("Es.FormatTimeAgo(invalid) = %q; want \"not-a-date\"", got)
 	}
+
+	// Traditional Chinese tests
+	if got := ZhTw.FormatTimeAgo(today); got != "今天" {
+		t.Errorf("ZhTw.FormatTimeAgo(today) = %q; want \"今天\"", got)
+	}
+	if got := ZhTw.FormatTimeAgo(yesterday); got != "昨天" {
+		t.Errorf("ZhTw.FormatTimeAgo(yesterday) = %q; want \"昨天\"", got)
+	}
+	if got := ZhTw.FormatTimeAgo(threeDaysAgo); got != "3 天前" {
+		t.Errorf("ZhTw.FormatTimeAgo(3d ago) = %q; want \"3 天前\"", got)
+	}
+	if got := ZhTw.FormatTimeAgo(tomorrow); got != "今天" {
+		t.Errorf("ZhTw.FormatTimeAgo(tomorrow) = %q; want \"今天\"", got)
+	}
+	if got := ZhTw.FormatTimeAgo("not-a-date"); got != "not-a-date" {
+		t.Errorf("ZhTw.FormatTimeAgo(invalid) = %q; want \"not-a-date\"", got)
+	}
 }
 
 func TestRuntimeLanguageManagement(t *testing.T) {
@@ -133,6 +154,16 @@ func TestRuntimeLanguageManagement(t *testing.T) {
 		t.Errorf("after SetLang(\"es_ES\"), GetLang() = %q; want \"es\"", GetLang())
 	}
 
+	SetLang("zh-TW")
+	if Current != &ZhTw || GetLang() != "zh-TW" {
+		t.Errorf("after SetLang(\"zh-TW\"), GetLang() = %q; want \"zh-TW\"", GetLang())
+	}
+
+	SetLang("zh_Hant")
+	if Current != &ZhTw || GetLang() != "zh-TW" {
+		t.Errorf("after SetLang(\"zh_Hant\"), GetLang() = %q; want \"zh-TW\"", GetLang())
+	}
+
 	SetLang("en")
 	if Current != &En || GetLang() != "en" {
 		t.Errorf("after SetLang(\"en\"), GetLang() = %q; want \"en\"", GetLang())
@@ -143,15 +174,32 @@ func TestRuntimeLanguageManagement(t *testing.T) {
 		t.Errorf("after SetLang(\"fr\"), GetLang() = %q; want \"en\"", GetLang())
 	}
 
-	// Test ToggleLang
+	// Test ToggleLang cycle: En → Tr → Es → ZhTw → En
 	ToggleLang()
 	if Current != &Tr || GetLang() != "tr" {
 		t.Errorf("after ToggleLang() from En, GetLang() = %q; want \"tr\"", GetLang())
 	}
 
 	ToggleLang()
+	if Current != &Es || GetLang() != "es" {
+		t.Errorf("after ToggleLang() from Tr, GetLang() = %q; want \"es\"", GetLang())
+	}
+
+	ToggleLang()
+	if Current != &ZhTw || GetLang() != "zh-TW" {
+		t.Errorf("after ToggleLang() from Es, GetLang() = %q; want \"zh-TW\"", GetLang())
+	}
+
+	ToggleLang()
 	if Current != &En || GetLang() != "en" {
-		t.Errorf("after ToggleLang() from Tr, GetLang() = %q; want \"en\"", GetLang())
+		t.Errorf("after ToggleLang() from ZhTw, GetLang() = %q; want \"en\"", GetLang())
+	}
+
+	// ToggleLang from an unexpected catalog also lands on En
+	Current = &Tr
+	SetLang("xx")
+	if Current != &En {
+		t.Errorf("after SetLang(\"xx\"), expected fallback to En")
 	}
 }
 
@@ -218,6 +266,25 @@ func TestSortModeLabel(t *testing.T) {
 			}
 		})
 	}
+
+	zhCases := []sortTestCase{
+		{name: "score", mode: "score", want: "分數"},
+		{name: "date", mode: "date", want: "日期"},
+		{name: "company", mode: "company", want: "公司"},
+		{name: "status", mode: "status", want: "狀態"},
+		{name: "location", mode: "location", want: "地點"},
+		{name: "pay", mode: "pay", want: "薪資"},
+		{name: "last", mode: "last", want: "最後"},
+		{name: "unknown", mode: "unknown", want: "unknown"},
+	}
+
+	for _, tc := range zhCases {
+		t.Run("ZhTw/"+tc.name, func(t *testing.T) {
+			if got := ZhTw.SortModeLabel(tc.mode); got != tc.want {
+				t.Errorf("ZhTw.SortModeLabel(%q) = %q; want %q", tc.mode, got, tc.want)
+			}
+		})
+	}
 }
 
 func TestViewModeLabel(t *testing.T) {
@@ -265,6 +332,20 @@ func TestViewModeLabel(t *testing.T) {
 		t.Run("Es/"+tc.name, func(t *testing.T) {
 			if got := Es.ViewModeLabel(tc.mode); got != tc.want {
 				t.Errorf("Es.ViewModeLabel(%q) = %q; want %q", tc.mode, got, tc.want)
+			}
+		})
+	}
+
+	zhCases := []viewTestCase{
+		{name: "grouped", mode: "grouped", want: "分組"},
+		{name: "flat", mode: "flat", want: "平鋪"},
+		{name: "unknown", mode: "unknown", want: "unknown"},
+	}
+
+	for _, tc := range zhCases {
+		t.Run("ZhTw/"+tc.name, func(t *testing.T) {
+			if got := ZhTw.ViewModeLabel(tc.mode); got != tc.want {
+				t.Errorf("ZhTw.ViewModeLabel(%q) = %q; want %q", tc.mode, got, tc.want)
 			}
 		})
 	}
