@@ -2574,3 +2574,35 @@ job_boards:
   # - name: CryptocurrencyJobs             # curated Web3/crypto board (RSS, all-remote)
   #   provider: cryptocurrencyjobs
   #   enabled: true
+
+  # ── Taiwan job boards (繁體中文市場) ────────────────────────────────
+  # 104人力銀行 — Taiwan's largest board. Zero-auth JSON API behind a Referer
+  # header check; /jobs/ explicitly allowed by robots.txt (ai-train=no,
+  # search=yes). Optional searchKeywords narrow the listing (server-side
+  # full-text); omitted → whole-board view (newest 3,000 reachable, 30/page,
+  # server-capped at 100 pages). max_pages default 10, cap 100. Full JD text
+  # and appearDate come for free on every row.
+
+  - name: 104人力銀行
+    careers_url: https://www.104.com.tw/jobs/main/
+    provider: job104
+    # searchKeywords: ["軟體工程師", "AI 工程師"]
+    # max_pages: 10
+    enabled: false
+    notes: "Taiwan's largest job board — public JSON search API, title_filter gates the whole-board view"
+
+  # Yourator — Taiwanese startup/digital board. Board-wide zero-auth JSON
+  # feed; walks every page until hasMore turns false and lets title_filter
+  # gate the results. The emitted URL is each row's thirdPartyUrl (the
+  # employer's own ATS) when present.
+
+  - name: Yourator（台灣新創）
+    careers_url: https://www.yourator.co/jobs
+    provider: yourator
+    enabled: false
+    notes: "Taiwanese startup job board — zero-auth board-wide feed"
+
+  # 1111人力銀行 is deliberately NOT here: listings sit behind an Altcha +
+  # Turnstile captcha gate (evaluated 2026-08-28, see docs/SUPPORTED_JOB_BOARDS.md
+  # → "Evaluated, not supported"). Paste 1111 posting URLs into
+  # data/pipeline.md manually instead.

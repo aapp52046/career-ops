@@ -190,7 +190,13 @@ const ATS_PROVIDERS = [
 // (`<figcaption class="closed-job__flavor--closed">No longer accepting
 // applications</figcaption>`) and drops the apply control. A live posting shows one
 // of two apply controls: the on-site button, or the off-site sign-in modal.
-const LINKEDIN_CLOSED_MARKER = /No longer accepting applications/i;
+//
+// The banner is localized for zh-TW / zh-CN visitors, so the marker also matches
+// LinkedIn's Traditional/Simplified Chinese closure wording (zh-TW market, #3100-era
+// Taiwan localization). The two-signal rule still guards each variant: the closed
+// banner alone never reads live, and the apply control is locale-independent HTML.
+const LINKEDIN_CLOSED_MARKER =
+  /No longer accepting applications|不再接受申請|已停止接受申請|不再接受申请|已停止招聘/i;
 const LINKEDIN_APPLY_CONTROL = /public_jobs_apply-link-onsite|job-details-topcard-apply-modal/;
 
 /**

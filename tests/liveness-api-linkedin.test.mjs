@@ -36,6 +36,7 @@ function check(desc, condition, details = '') {
 
 const fixture = (name) => readFileSync(join(ROOT, 'tests', 'fixtures', `linkedin-guest-${name}.html`), 'utf-8');
 const CLOSED = fixture('closed');
+const CLOSED_ZH_TW = fixture('closed-zh-TW');
 const LIVE_ONSITE = fixture('live-onsite');
 const LIVE_MODAL = fixture('live-modal');
 
@@ -99,6 +100,14 @@ const API = `https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/${ID}`;
   check('and the expired verdict carries a LinkedIn-specific code',
     closed?.code === 'linkedin_closed_marker', JSON.stringify(closed));
 
+  // The banner is localized: a zh-TW visitor's closed posting must read expired
+  // too, or Taiwan-market pipelines would keep chasing dead postings.
+  const closedZhTw = classifyLinkedInPosting(CLOSED_ZH_TW);
+  check('a zh-TW closed posting (「不再接受申請」) reads expired',
+    closedZhTw?.result === 'expired', JSON.stringify(closedZhTw));
+  check('and carries the same LinkedIn-specific code',
+    closedZhTw?.code === 'linkedin_closed_marker', JSON.stringify(closedZhTw));
+
   // NEGATIVE CONTROL. If the apply-control signal stops being read, these two go
   // red and nothing else does — which is the whole point of asserting them by
   // name. A rung that answers "expired" for every posting passes every assertion
@@ -143,6 +152,12 @@ const API = `https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/${ID}`;
   );
   check('the closed marker on its own never reads as live',
     markerOnly?.result === 'expired', JSON.stringify(markerOnly));
+
+  const zhMarkerOnly = classifyLinkedInPosting(
+    '<figcaption class="closed-job__flavor--closed">不再接受申請</figcaption>'
+  );
+  check('the zh-TW closed marker on its own never reads as live',
+    zhMarkerOnly?.result === 'expired', JSON.stringify(zhMarkerOnly));
 
   check('an empty body is inconclusive rather than expired',
     classifyLinkedInPosting('') === null, JSON.stringify(classifyLinkedInPosting('')));
