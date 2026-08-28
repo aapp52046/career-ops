@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 import { careerOpsRoot, rootScript } from "@/lib/career-ops";
 import { writeTempPortals, cleanupTempPortals } from "./portals";
 import { ATS_SOURCES, type DiscoveredOffer, type ExploreFilters, type ScanEvent } from "@/lib/explore";
@@ -7,11 +8,20 @@ import { ATS_SOURCES, type DiscoveredOffer, type ExploreFilters, type ScanEvent 
 export type { DiscoveredOffer, ScanEvent, AtsSource } from "@/lib/explore";
 export { ATS_SOURCES } from "@/lib/explore";
 
+// Sources the core `scan-ats-full.mjs` CLI can handle. job104 is a JOB BOARD
+// provider (portals.yml `job_boards:`), not an ATS dataset — the web scans it
+// through its own runner (job104-scan.mjs) with the same event grammar.
+const CLI_ATS = ATS_SOURCES.filter((a) => a !== "job104");
+const JOB104_RUNNER = path.join(careerOpsRoot(), "web", "src", "lib", "core", "job104-scan.mjs");
+
 /**
  * ACL for the discovery engine — orchestrates the REAL core scanner
  * `scan-ats-full.mjs` (reverse ATS discovery, a contract entry-point). We run it
  * with `--dry-run` so it writes NOTHING (the user reviews + chooses), point it at
  * an EPHEMERAL filter file (never the user's portals.yml), and surface its results.
+ * When the user selects the 104人力銀行 source, runDiscovery additionally drives
+ * the job104 provider through its own child runner — same event grammar, same
+ * `seen` dedup, so a posting surfaced twice across engines appears once.
  *
  * DISCOVERY IS FREE — zero LLM tokens (pure HTTP + JSON). Only evaluation costs
  * tokens, and that is triggered explicitly elsewhere.
@@ -80,10 +90,14 @@ type ScanJson = {
   offers?: JsonOffer[];
 };
 
-export function runDiscovery(filters: ExploreFilters, onEvent: (e: ScanEvent) => void): Promise<DiscoveredOffer[]> {
+/** ATS-network sweep (scan-ats-full.mjs as a child). Never runs job104. */
+function runCliSweep(
+  filters: ExploreFilters,
+  cliAts: string[],
+  tempPortals: string,
+  onEvent: (e: ScanEvent) => void,
+): Promise<DiscoveredOffer[]> {
   return new Promise((resolve) => {
-    const tempPortals = writeTempPortals(filters);
-    const ats = (filters.ats.length ? filters.ats : [...ATS_SOURCES]).filter((a) => (ATS_SOURCES as readonly string[]).includes(a));
     const useJson = scannerSupportsJson();
     const args = [
       rootScript("scan-ats-full"),
@@ -91,7 +105,7 @@ export function runDiscovery(filters: ExploreFilters, onEvent: (e: ScanEvent) =>
       "--since",
       String(Math.max(1, filters.sinceDays || 7)),
       "--ats",
-      ats.join(","),
+      cliAts.join(","),
       "--limit",
       String(Math.max(1, filters.limitPerAts || 150)),
     ];
@@ -104,7 +118,7 @@ export function runDiscovery(filters: ExploreFilters, onEvent: (e: ScanEvent) =>
 
     const offers: DiscoveredOffer[] = [];
     const seen = new Set<string>();
-    let currentAts: string = ats[0] || "";
+    let currentAts: string = cliAts[0] || "";
     let pending: Omit<DiscoveredOffer, "url"> | null = null;
     let companiesScanned = 0;
     let unreachable = 0;
@@ -216,13 +230,11 @@ export function runDiscovery(filters: ExploreFilters, onEvent: (e: ScanEvent) =>
 
     child.on("error", (e) => {
       clearTimeout(killer);
-      cleanupTempPortals(tempPortals);
       onEvent({ kind: "error", message: e instanceof Error ? e.message : "scanner failed to start" });
       resolve(offers);
     });
     child.on("close", () => {
       clearTimeout(killer);
-      cleanupTempPortals(tempPortals);
       if (useJson) {
         let j: ScanJson | null = null;
         try {
@@ -271,4 +283,117 @@ export function runDiscovery(filters: ExploreFilters, onEvent: (e: ScanEvent) =>
       resolve(offers);
     });
   });
+}
+
+/**
+ * 104人力銀行 sweep through the job104 provider (child runner). Shares the
+ * caller's `seen` set (and returns its own) so a posting seen by the ATS sweep
+ * is never duplicated across engines.
+ */
+function runJob104Sweep(
+  filters: ExploreFilters,
+  seen: Set<string>,
+  offers: DiscoveredOffer[],
+  onEvent: (e: ScanEvent) => void,
+): Promise<void> {
+  if (!filters.ats.includes("job104")) return Promise.resolve();
+  return new Promise((resolve) => {
+    if (!fs.existsSync(JOB104_RUNNER)) {
+      onEvent({ kind: "log", line: "104人力銀行 runner not found — source skipped." });
+      onEvent({ kind: "atsDone", ats: "job104", unreachable: 1 });
+      resolve();
+      return;
+    }
+    const payload = {
+      positive: filters.positive,
+      negative: filters.negative,
+      allow: filters.allow,
+      block: filters.block,
+      blockHard: filters.blockHard,
+      alwaysAllow: filters.alwaysAllow,
+      sinceDays: filters.sinceDays ?? 7,
+      limitPerAts: filters.limitPerAts ?? 150,
+    };
+    const child = spawn(process.execPath, [JOB104_RUNNER, JSON.stringify(payload)], {
+      cwd: careerOpsRoot(),
+      env: process.env,
+    });
+    let buf = "";
+    const killer = setTimeout(() => {
+      try {
+        child.kill("SIGTERM");
+      } catch {
+        /* ignore */
+      }
+    }, 45_000);
+
+    const handle = (raw: string) => {
+      let e: ScanEvent;
+      try {
+        e = JSON.parse(raw) as ScanEvent;
+      } catch {
+        return;
+      }
+      if (e.kind === "offer") {
+        if (!seen.has(e.offer.url)) {
+          seen.add(e.offer.url);
+          offers.push(e.offer);
+          onEvent(e);
+        }
+        return;
+      }
+      if (e.kind === "atsDone") {
+        onEvent(e);
+        return;
+      }
+      onEvent(e); // progress / log / error
+    };
+
+    child.stdout.on("data", (d: Buffer) => {
+      buf += d.toString();
+      const parts = buf.split(/\r?\n/);
+      buf = parts.pop() ?? "";
+      for (const p of parts) if (p.trim()) handle(p);
+    });
+    child.stderr.on("data", (d: Buffer) => {
+      const s = d.toString().trim();
+      if (s) onEvent({ kind: "log", line: s.split(/\r?\n/).slice(0, 3).join(" | ") });
+    });
+    child.on("error", (e) => {
+      clearTimeout(killer);
+      onEvent({ kind: "log", line: `104人力銀行 runner failed to start: ${e.message}` });
+      onEvent({ kind: "atsDone", ats: "job104", unreachable: 1 });
+      resolve();
+    });
+    child.on("close", () => {
+      clearTimeout(killer);
+      if (buf.trim()) handle(buf);
+      resolve();
+    });
+  });
+}
+
+export async function runDiscovery(filters: ExploreFilters, onEvent: (e: ScanEvent) => void): Promise<DiscoveredOffer[]> {
+  const tempPortals = writeTempPortals(filters);
+  const ats = (filters.ats.length ? filters.ats : [...ATS_SOURCES]).filter((a) => (ATS_SOURCES as readonly string[]).includes(a));
+  const cliAts = ats.filter((a) => (CLI_ATS as readonly string[]).includes(a));
+
+  const offers: DiscoveredOffer[] = [];
+  const seen = new Set<string>();
+
+  try {
+    if (cliAts.length > 0) {
+      const cliOffers = await runCliSweep(filters, cliAts, tempPortals, onEvent);
+      for (const o of cliOffers) {
+        if (seen.has(o.url)) continue;
+        seen.add(o.url);
+        offers.push(o);
+      }
+    }
+  } finally {
+    cleanupTempPortals(tempPortals);
+  }
+
+  await runJob104Sweep(filters, seen, offers, onEvent);
+  return offers;
 }

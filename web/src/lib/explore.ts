@@ -4,13 +4,14 @@
 // can never drift between the two halves. Server-only logic (spawning the scanner,
 // writing temp files) lives in lib/core/{scan,portals,pipeline}.ts.
 
-export type AtsSource = "greenhouse" | "lever" | "ashby" | "workday";
-export const ATS_SOURCES: AtsSource[] = ["greenhouse", "lever", "ashby", "workday"];
+export type AtsSource = "greenhouse" | "lever" | "ashby" | "workday" | "job104";
+export const ATS_SOURCES: AtsSource[] = ["greenhouse", "lever", "ashby", "workday", "job104"];
 export const ATS_LABEL: Record<AtsSource, string> = {
   greenhouse: "Greenhouse",
   lever: "Lever",
   ashby: "Ashby",
   workday: "Workday",
+  job104: "104人力銀行",
 };
 
 /** The full UI filter state. The keyword/location lists mirror scan.mjs's
