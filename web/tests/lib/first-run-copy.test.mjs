@@ -6,8 +6,11 @@ import { test } from "node:test";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
+// The first-run English copy lives in the i18n dictionary now; the same
+// guarantees still apply to the en catalog (the zh-TW catalog is a separate,
+// intentionally reworded translation).
 test("first-run home does not claim no setup", () => {
-  const src = readFileSync(join(root, "src/components/home/first-run-home.tsx"), "utf8");
+  const src = readFileSync(join(root, "src/lib/i18n/strings.ts"), "utf8");
   assert.doesNotMatch(src, /No setup/);
   assert.match(src, /PDF needs an AI CLI/);
 });

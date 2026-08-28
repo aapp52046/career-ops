@@ -12,6 +12,7 @@ import { DiscoveryCard } from "@/components/explore/discovery-card";
 import { FollowUpCard, type FollowUp } from "@/components/home/follow-up-card";
 import { DecisionCard } from "@/components/home/decision-card";
 import { QuickEvaluate } from "@/components/quick-evaluate";
+import { useT } from "@/lib/i18n/i18n";
 
 // The retention "Today": a dual-loop action queue (the maintainer's
 // "N new matches this week · M follow-ups due"). SUPPLY loop = fresh free-scan
@@ -33,7 +34,11 @@ export function TodayDashboard({
   const [fresh, setFresh] = useState<DiscoveredOffer[]>([]);
   const [freshCount, setFreshCount] = useState(0);
   const router = useRouter();
-  const dateLabel = useMemo(() => new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }), []);
+  const { lang, t } = useT();
+  const dateLabel = useMemo(
+    () => new Date().toLocaleDateString(lang === "zhTW" ? "zh-TW" : "en-US", { weekday: "long", month: "short", day: "numeric" }),
+    [lang],
+  );
 
   const refetch = useCallback(() => {
     fetch("/api/followups")
@@ -90,36 +95,36 @@ export function TodayDashboard({
         <div aria-hidden className="pointer-events-none absolute inset-0 z-[1] bg-surface/55 backdrop-blur-[2px] dark:bg-background/45" />
         <div className="relative z-10">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
-            <span className="text-faint">//</span> today · <span className="tabular-nums">{dateLabel}</span>
+            <span className="text-faint">//</span> {t("home.todayLabel")} · <span className="tabular-nums">{dateLabel}</span>
           </p>
           <h1 className={`${instrumentSerif.className} mt-3 text-4xl leading-[1.05] text-landing md:text-5xl`}>
             {allClear ? (
-              <>You&apos;re all caught up.</>
+              <>{t("home.allCaughtUp")}</>
             ) : (
               <>
                 {newThisWeek > 0 && (
                   <>
-                    <span className="text-brand tabular-nums">{newThisWeek}</span> new match{newThisWeek === 1 ? "" : "es"} this week
+                    <span className="text-brand tabular-nums">{newThisWeek}</span> {t("home.newMatches", { n: newThisWeek })}
                   </>
                 )}
                 {newThisWeek > 0 && overdue > 0 && <span className="text-faint"> · </span>}
                 {overdue > 0 && (
                   <>
-                    <span className="text-brand tabular-nums">{overdue}</span> follow-up{overdue === 1 ? "" : "s"} due
+                    <span className="text-brand tabular-nums">{overdue}</span> {t("home.followupsDue", { n: overdue })}
                   </>
                 )}
               </>
             )}
           </h1>
           <p className="mt-4 max-w-xl text-sm text-muted">
-            {allClear ? "I'll keep scanning the market in the background and surface anything that fits." : "Your action queue for today — discovery and follow-ups, in one place."}
+            {allClear ? t("home.keepScanning") : t("home.actionQueue")}
           </p>
           <div className="mt-6 flex flex-wrap gap-2.5">
             <Link href="/explore" className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground transition hover:bg-brand-200 max-sm:min-h-[44px]">
-              Find new roles <ArrowRight className="size-4" />
+              {t("home.findNewRoles")} <ArrowRight className="size-4" />
             </Link>
             <Link href="/pipeline" className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition hover:border-brand/40 hover:text-brand max-sm:min-h-[44px]">
-              Open pipeline
+              {t("home.openPipeline")}
             </Link>
           </div>
           {inBetween && <QuickEvaluate />}
@@ -128,7 +133,7 @@ export function TodayDashboard({
 
       {/* A. Follow-ups due (demand loop) */}
       {followups.length > 0 ? (
-        <Section icon={Bell} title="Follow-ups due" hint="Keep your applications alive — a nudge beats silence">
+        <Section icon={Bell} title={t("home.followupsDueTitle")} hint={t("home.keepAliveHint")}>
           <div className="grid gap-2.5">
             {followups.map((f) => (
               // Refetch (not a local decrement) so the parent's followups/nextUpcoming
@@ -142,11 +147,11 @@ export function TodayDashboard({
         nextUpcoming && (
           // Nothing is due — say so honestly instead of an empty "due" block,
           // but still surface what's next so the queue isn't silent (#86).
-          <Section icon={Bell} title="Next follow-up" hint="Nothing due yet">
+          <Section icon={Bell} title={t("home.nextFollowup")} hint={t("home.nothingDue")}>
             <p className="text-sm text-muted">
               <span className="font-medium text-foreground">{nextUpcoming.company}</span>
               {nextUpcoming.role && <span> · {nextUpcoming.role}</span>}
-              {nextUpcoming.nextFollowupDate && <span className="text-faint"> — upcoming {nextUpcoming.nextFollowupDate}</span>}
+              {nextUpcoming.nextFollowupDate && <span className="text-faint"> — {t("home.upcomingDate", { d: nextUpcoming.nextFollowupDate })}</span>}
             </p>
           </Section>
         )
@@ -154,7 +159,7 @@ export function TodayDashboard({
 
       {/* B. Awaiting your decision */}
       {awaiting.length > 0 && (
-        <Section icon={CircleHelp} title="Awaiting your decision" hint="Scored — apply or skip">
+        <Section icon={CircleHelp} title={t("home.awaitingDecision")} hint={t("home.scoredApplySkip")}>
           <div className="grid gap-2.5 sm:grid-cols-2">
             {awaiting.map((a) => (
               <DecisionCard key={a.n} app={a} />
@@ -165,7 +170,7 @@ export function TodayDashboard({
 
       {/* C. Fresh matches this week (supply loop) */}
       {fresh.length > 0 && (
-        <Section icon={Sparkles} title="Fresh matches this week" hint="Found by your free scans · 0 tokens">
+        <Section icon={Sparkles} title={t("home.freshMatches")} hint={t("home.foundByScans")}>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {fresh.slice(0, 6).map((o) => (
               <DiscoveryCard key={o.url} offer={o} inPipeline={inboxUrls.has(o.url)} />
@@ -173,7 +178,7 @@ export function TodayDashboard({
           </div>
           {fresh.length > 6 && (
             <Link href="/explore?view=fresh" className="mt-3 inline-flex items-center text-sm text-muted transition hover:text-brand max-sm:min-h-[44px]">
-              See all {freshCount} →
+              {t("home.seeAll", { n: freshCount })}
             </Link>
           )}
         </Section>
@@ -183,7 +188,7 @@ export function TodayDashboard({
         <div className="mt-8 rounded-2xl border border-border bg-surface/30 px-6 py-10 text-center">
           <Sparkles className="mx-auto size-6 text-brand" />
           <p className="mx-auto mt-3 max-w-md text-sm text-muted">
-            Nothing needs you right now. Run a <Link href="/explore" className="text-brand hover:underline">free scan</Link> to surface this week&apos;s roles, or check your <Link href="/pipeline" className="text-brand hover:underline">pipeline</Link>.
+            {t("home.nothingNeedsYou")} <Link href="/explore" className="text-brand hover:underline">{t("home.freeScan")}</Link> {t("home.orCheck")} <Link href="/pipeline" className="text-brand hover:underline">{t("home.pipelineWord")}</Link>.
           </p>
         </div>
       )}
