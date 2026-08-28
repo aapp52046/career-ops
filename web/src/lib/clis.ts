@@ -101,6 +101,13 @@ function searchDirs(): string[] {
 // On Windows, executables carry an extension (claude.exe, claude.cmd, ...).
 // Mirror the shell's PATHEXT resolution so a native-installer claude.exe is
 // found, not just an extensionless npm shim. On POSIX, "" keeps the bare name.
+//
+// WINDOWS ORDER MATTERS: npm installs a global bin as an extensionless bash
+// shim + a `.cmd`/`.ps1` pair. The extensionless shim is a shebang TEXT file —
+// CreateProcess (child_process.spawn without a shell) cannot start it, and the
+// `.cmd` needs cmd.exe. So real executables come first (native installers),
+// then the script shims, and the bare name LAST (it must never shadow the
+// .cmd shim, and is only meaningful for an exotic extensionless native bin).
 function binCandidates(bin: string): string[] {
   if (process.platform !== "win32") return [bin];
   const pathext = process.env.PATHEXT || ".COM;.EXE;.BAT;.CMD";
@@ -109,10 +116,11 @@ function binCandidates(bin: string): string[] {
     .map((e) => e.trim())
     .filter(Boolean)
     // Only include extensions that `child_process.spawn()` can execute directly.
-    .filter((e) => [".com", ".exe", ".bat", ".cmd"].includes(e.toLowerCase()));
+    .filter((e) => [".com", ".exe", ".bat", ".cmd"].includes(e.toLowerCase()))
+    .map((e) => e.toLowerCase());
 
-  // Try the bare name too (some environments provide an extensionless shim).
-  return [bin, ...exts.map((ext) => bin + ext)];
+  const ORDER = [".exe", ".com", ".cmd", ".bat"];
+  return [...ORDER.map((e) => bin + e).filter((p) => exts.includes(p.slice(p.lastIndexOf(".")))), bin];
 }
 
 export function findBin(bin: string, dirs = searchDirs()): string | null {

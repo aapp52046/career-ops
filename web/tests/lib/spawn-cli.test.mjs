@@ -6,7 +6,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { spawnHeadlessCli } from "../../src/lib/spawn-cli.mjs";
+import { spawnHeadlessCli, parseShimTarget } from "../../src/lib/spawn-cli.mjs";
 
 test("spawnHeadlessCli closes stdin so a headless CLI can start", async () => {
   // Given: a child that only speaks once its stdin has reached EOF — a stand-in
@@ -68,4 +68,50 @@ test("spawnHeadlessCli tolerates a caller that passes stdio itself", async () =>
   assert.equal(child.stdin, null);
   assert.equal(code, 0);
   assert.equal(stdout, "OK");
+});
+
+test("parseShimTarget reads the Node entrypoint out of a standard npm cmd-shim", () => {
+  const LF_SHIM = [
+    "@ECHO off",
+    "GOTO start",
+    ":find_dp0",
+    "SET dp0=%~dp0",
+    "EXIT /b",
+    ":start",
+    "SETLOCAL",
+    "CALL :find_dp0",
+    "",
+    'IF EXIST "%dp0%\\node.exe" (',
+    '  SET "_prog=%dp0%\\node.exe"',
+    ") ELSE (",
+    '  SET "_prog=node"',
+    "  SET PATHEXT=%PATHEXT:;.JS;=;%",
+    ")",
+    "",
+    'endLocal & goto #_undefined_# 2>NUL || title %COMSPEC% & "%_prog%"  "%dp0%\\node_modules\\opencode\\bin" %*',
+    "",
+  ].join("\n");
+  assert.equal(parseShimTarget(LF_SHIM), "node_modules\\opencode\\bin");
+});
+
+test("parseShimTarget handles CRLF shims and a bin with a sub-path", () => {
+  // Real npm output is CRLF; also pin the LAST node_modules entry winning,
+  // even though the shim quotes "%dp0%\node.exe" earlier on.
+  const CRLF_SHIM = [
+    "@ECHO off",
+    'IF EXIST "%dp0%\\node.exe" (',
+    '  SET "_prog=%dp0%\\node.exe"',
+    ") ELSE (",
+    '  SET "_prog=node"',
+    ")",
+    'endLocal & goto #_undefined_# 2>NUL || title %COMSPEC% & "%_prog%"  "%dp0%\\node_modules\\@opencode\\cli\\dist\\bin.js" %*',
+    "",
+  ].join("\r\n");
+  assert.equal(parseShimTarget(CRLF_SHIM), "node_modules\\@opencode\\cli\\dist\\bin.js");
+});
+
+test("parseShimTarget returns null when the shim is not an npm cmd-shim", () => {
+  assert.equal(parseShimTarget(""), null);
+  assert.equal(parseShimTarget("@ECHO off\r\nsome-other-tool %*\r\n"), null);
+  assert.equal(parseShimTarget('if not exist "%dp0%\\x.exe" goto :end\r\nexit /b\r\n'), null);
 });
