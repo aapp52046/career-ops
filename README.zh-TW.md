@@ -65,6 +65,17 @@
   <a href="TRADEMARK.md"><img src="https://img.shields.io/badge/Trademark-Policy-blue.svg" alt="Trademark Policy"></a>
 </p>
 
+---
+
+> ## 📝 本 repo 為 Taiwan fork（`aapp52046/career-ops`）
+>
+> 這是一個**台灣在地化 fork**，來源：[santifer/career-ops](https://github.com/santifer/career-ops)（MIT）。在此基礎上加裝：
+> - 104人力銀行與 Yourator 掃描（`providers/job104.mjs`、`modes/zh-TW/`）
+> - 繁體中文 Web UI（`web/`）與 Go TUI 儀表板語言（zh-TW）
+> - Windows npm-shim CLI 修復（opencode 等可被 web 驅動）
+>
+> **隱私承諾：** 你的所有個人資料 —— `cv.md`、`config/profile.yml`、`portals.yml`、`data/`、`reports/`、`output/`、`documents/`、`interview-prep/` —— 全部只存在你自己的本機，且被 `.gitignore` 排除（有 `user-layer files are git-ignored` 測試把關）。本 fork 上傳前也會掃描個人字串與金鑰；**倉庫中絕不含任何使用者的履歷或求職資料**。
+
 ## 這是什麼
 
 career-ops 能將任何 AI 程式碼 CLI 轉化為完整的求職指揮中心。不再需要手動用試算表追蹤應徵紀錄，而是獲得一個 AI 驅動的管道，能夠：

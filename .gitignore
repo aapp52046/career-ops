@@ -112,6 +112,10 @@ data/model-blacklist.json
 *.mov
 *.mp4
 
+# Local helper scripts — the user's own launchers (e.g. 掃描職缺.bat),
+# never part of the tool itself
+/*.bat
+
 # IDE-specific local config
 .idea/
 .vscode/

@@ -94,6 +94,14 @@
   <a href="TRADEMARK.md"><img src="https://img.shields.io/badge/Trademark-Policy-blue.svg" alt="Trademark Policy"></a>
 </p>
 
+---
+
+> ## 📝 This repo is a Taiwan fork (`aapp52046/career-ops`)
+>
+> A Taiwan-localized fork of [santifer/career-ops](https://github.com/santifer/career-ops) (MIT). Adds: 104人力銀行 / Yourator job-board scanning (`providers/job104.mjs`, `modes/zh-TW/`), Traditional Chinese web UI (`web/`) and Go TUI strings, plus a Windows npm-shim CLI fix so the web can drive `opencode` and friends.
+>
+> **Privacy commitment:** all of your personal data — `cv.md`, `config/profile.yml`, `portals.yml`, `data/`, `reports/`, `output/`, `documents/`, `interview-prep/` — lives only on your machine and is excluded by `.gitignore` (guarded by the `user-layer files are git-ignored` test). Personal strings and API keys are scanned before any upload; this repo never contains a user's CV or application data.
+
 ## What Is This
 
 career-ops ([career-ops.org](https://career-ops.org), also known as **careerops**) turns any AI coding CLI into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
